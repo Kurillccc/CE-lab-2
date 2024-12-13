@@ -3,27 +3,33 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
 g = 9.8
-l = 0.5
+l = 1.0
 
 # Исходная система
 def nonlinear_system(t, y):
-    theta, theta_dot, phi, phi_dot = y
-    theta_ddot = np.sin(theta) * np.cos(theta) * (phi_dot ** 2) - (g / l) * np.sin(theta)
-    phi_ddot = -2 * np.cos(theta) * theta_dot * phi_dot / np.sin(theta)
-    return [theta_dot, theta_ddot, phi_dot, phi_ddot]
+    phi_, dphi_, theta_, dtheta_, = y
+    dphi = dphi_
+    ddphi = -2 * dphi_ * dtheta_ / (np.tan(theta_) + 1e-12)
+    dtheta = dtheta_
+    ddtheta = np.sin(theta_) * np.cos(theta_) * dphi_**2 - (g / l) * np.sin(theta_)
+    return [dphi, ddphi, dtheta, ddtheta]
 
 
-# Линеаризованная система
 def linearized_system(t, y):
-    theta, theta_dot, phi, phi_dot = y
-    omega = g / l
-    OMEGA = (omega**2) / np.cos(theta)
-    # omega = 1.1
-    # OMEGA = 1
-    # theta_ddot = -g/l * phi_dot
-    theta_ddot = - np.sin(theta) * (omega - OMEGA * np.cos(theta))
-    phi_ddot = 0
-    return [theta_dot, theta_ddot, phi_dot, phi_ddot]
+    phi, dphi, theta, dtheta = y
+    return [dphi, 0, dtheta, -g/l * theta]
+
+# # Линеаризованная система
+# def linearized_system(t, y):
+#     theta, theta_dot, phi, phi_dot = y
+#     omega = g / l
+#     OMEGA = (omega**2) / np.cos(theta)
+#     # omega = 1.1
+#     # OMEGA = 1
+#     # theta_ddot = -g/l * phi_dot
+#     theta_ddot = - np.sin(theta) * (omega - OMEGA * np.cos(theta))
+#     phi_ddot = 0
+#     return [theta_dot, theta_ddot, phi_dot, phi_ddot]
 
 # # Функция для нормальных колебаний
 # def find_normal_conditions(l):
@@ -49,7 +55,7 @@ def simulate_systems(params, y0, t_span=(0, 10), n_points=1000):
 
 if __name__ == "__main__":
     # 1-2 часть далее
-    y0 = [1.0, 0.0, 0.0, 1.0]
+    y0 = [0.0, 0.0, 0.0, 1.0]
     t_span= (0, 10)  # временной интервал
 
     # Прямое численное моделирование
